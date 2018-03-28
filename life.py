@@ -1,12 +1,25 @@
 import copy
 from tkinter import *
 
+graph = []
+
+class Window(Frame):
+    def __init__(self,master = None):
+        Frame.__init__(self, master)
+        self.master = master 
+    
+    def init_window(self):
+        self.master.title("Conway's Life")
+        self.pack(fill=BOTH, expand=1)
+
 class Conway:
-    def __init__(self,generations,graph):
+    def __init__(self,generations,graph,root):
         self.gen = generations
         self.game = graph
         self.rows = len(graph) -1
         self.cols = len(graph[0]) -1 
+        self.m = 25
+        self.graph = []
         # game runs gen times, 1 = alive, 0 = dead
         # Calculate N, the N of live cells in C's eight-location neighborhood. 
         # need to change cell from (0,0).
@@ -18,6 +31,7 @@ class Conway:
                     cell = (j,k)
                     self.n = self.nearby(self.tempG,cell)
                     self.game[cell[0]][cell[1]] = self.deadOrAlive(self.n,cell) #determine if cell is dead or alive
+            self.draw()
             self.printGen(i+1)
             
         
@@ -64,16 +78,6 @@ class Conway:
                 N += graph[row+1][col+1]
         return N
 
-    # def build_graph(self):
-    #     global graph
-    #     global m
-    #     WIDTH = m*len(grid[0])
-    #     HEIGHT = m*len(grid)
-    #     root = Tk()
-    #     root.overrride
-
-        
-
 
 def IOGame(inFile, outFile):
     # number at start of file is number of generations to simulate followed by a graph
@@ -88,7 +92,16 @@ def IOGame(inFile, outFile):
         graph.append([int(x) for x in temp]) #removing \n char from line
 
     # need to print each thing to the file, open file and pass "out" to object??
-    Conway(generations, graph)
+    root = Tk()
+    m = 25
+    WIDTH = m*len(graph[0])
+    HEIGHT = m*len(graph)
+    root.geometry('%dx%d+%d+%d' % (WIDTH, HEIGHT, (root.winfo_screenwidth() - WIDTH) / 2, (root.winfo_screenheight() - HEIGHT) / 2))
+    app = Window(root)
+    root.bind_all('<Escape>', lambda event: event.widget.quit())
+    graph = Canvas(root, width=WIDTH, height=HEIGHT, background='white')
+    root.mainloop()
+    Conway(generations, graph, root)
 
 
 def main():
