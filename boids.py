@@ -17,21 +17,28 @@ class Boids:
     def __init__(self, n, interval):
         self.n = n     # number of boids
         self.interval = interval
-        self.boids = [[0, 0]] * n      # boids[i] = (x, y)   ie. position of boid i
-        self.velocities = [[0, 0]] * n # positions[i] = (vx, vy) ie. velocity in each direction of boid i
+        self.boids = [[0,0] for i in range(n)]      # boids[i] = (x, y)   ie. position of boid i
+        self.velocities = [[0,0] for i in range(n)] # positions[i] = (vx, vy) ie. velocity in each direction of boid i
         self.turtles = []
         self.wn = turtle.Screen()
+        width = self.wn.window_width()
+        height = self.wn.window_height()
+        self.wLeft = (0 - width) // 2
+        self.wRight = width // 2
+        self.hTop = height // 2
+        self.hBottom = (0 - height) // 2
         self.initializeBoids()
         self.runBoids(interval)
 
     def initializeBoids(self):
-        width = 400
-        height = 300
         self.wn.bgcolor("lightgreen")
-        self.wn.screensize(width, height)
         for i in range(self.n):
-            self.boids[i][0] = random.randrange(0, width)
-            self.boids[i][1] = random.randrange(0, height)
+            self.boids[i][0] = random.randrange(self.wLeft, self.wRight)
+            self.boids[i][1] = random.randrange(self.hBottom, self.hTop)
+            #print("Boid: [" + str(self.boids[i][0]) + ", " + str(self.boids[i][1]) + "]")
+        self.moveAllBoids()
+        self.moveAllBoids()
+        for i in range(self.n):
             self.turtles.append(turtle.Turtle())
             self.turtles[i].shape("turtle")
             self.turtles[i].speed("fastest")
@@ -43,7 +50,6 @@ class Boids:
     def runBoids(self, interval):
         while True:
             start = time.time()
-
             self.moveAllBoids()
             self.drawBoids()
 
@@ -69,7 +75,7 @@ class Boids:
         b = None
         for i in range(len(self.boids)):
             b = self.boids[i]
-            print("b: [" + str(b[0]) + ", " + str(b[1]) + "]")
+            #print("b: [" + str(b[0]) + ", " + str(b[1]) + "]")
             v1 = self.cohesion(b, i)
             v2 = self.separation(b, i)
             v3 = self.alignment(b, i)
@@ -77,6 +83,7 @@ class Boids:
 
             self.velocities[i] = self.vectorAdd(self.velocities[i], sum)
             self.boids[i] = self.vectorAdd(self.boids[i], self.velocities[i])
+            self.boids[i] = self.checkBoid(self.boids[i], i)
 
     def cohesion(self, bj, ix):
         pcj = [0, 0]
@@ -92,7 +99,7 @@ class Boids:
         for i in range(len(self.boids)):
             b = self.boids[i]
             if b != bj:
-                if self.euclideanDistance(self.boids[i], self.boids[ix]) < 10:
+                if self.euclideanDistance(self.boids[i], self.boids[ix]) < 30:
                     c = self.vectorSubtract(c, self.vectorSubtract(self.boids[i],  self.boids[ix]))
         return c
 
@@ -104,6 +111,45 @@ class Boids:
                 pvj = self.vectorAdd(pvj, self.velocities[i])
         pvj = [pvj[0] / (self.n - 1), pvj[1] / (self.n - 1)]
         return [(pvj[0] - self.velocities[ix][0]) / 8, (pvj[1] - self.velocities[ix][1]) / 8]
+
+    def checkBoid(self, boid, ix):
+        x = boid[0]
+        y = boid[1]
+        move = 10
+        hadToMove = False
+        if x < self.wLeft:
+            boid[0] = self.wLeft + move
+            hadToMove = True
+        elif x > self.wRight:
+            boid[0] = self.wRight - move
+            hadToMove = True
+        if y < self.hBottom:
+            boid[1] = self.hBottom + move
+            hadToMove = True
+        elif y > self.hTop:
+            boid[1] = self.hTop - move
+            hadToMove = True
+        if hadToMove:
+            self.velocities[ix] = self.checkVelocity(boid, self.velocities[ix])
+        return boid
+
+    def checkVelocity(self, boid, velocity):
+        thetaClock = math.radians(90)
+        thetaCounterClock = -1 * thetaClock
+        x = boid[0]
+        y = boid[1]
+        xVel = velocity[0]
+        yVel = velocity[1]
+        if xVel > x:
+            newXVel = (math.cos(thetaClock) * xVel) - (math.sin(thetaClock) * yVel)
+        else:
+            newXVel = (math.cos(thetaCounterClock) * xVel) - (math.sin(thetaCounterClock) * yVel)
+        if yVel > y:
+            newYVel = (math.cos(thetaClock) * xVel) + (math.sin(thetaClock) * yVel)
+        else:
+            newYVel = (math.cos(thetaCounterClock) * xVel) + (math.sin(thetaCounterClock) * yVel)
+        velocity = [newXVel, newYVel]
+        return velocity
 
     def euclideanDistance(self, v1, v2):
         return math.sqrt(math.pow(v2[0] - v1[0], 2) + math.pow(v2[1] - v1[1], 2))
@@ -133,7 +179,8 @@ def angleBetween(u, v):
         result = 1
     elif result < (-1):
         result = -1
-    return math.acos(result)
+    #print("Angle between: " + str(math.degrees(math.acos(result))))
+    return math.degrees(math.acos(result))
 
 def main():
     n = 10         # number of boids
