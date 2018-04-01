@@ -6,11 +6,11 @@ graph = []
 m = 25
 
 class Conway(Frame):
-    def __init__(self,generations,game):
+    def __init__(self,generations,game,outf):
         self.gen = generations
-        self.game = game
-        self.rows = len(self.game) -1
-        self.cols = len(self.game[0]) -1 
+        self.game = game[:-1]
+        self.rows = len(self.game)
+        self.cols = len(self.game[0])
         self.m = 25
         self.graph = []
         self.build_graph()
@@ -18,19 +18,21 @@ class Conway(Frame):
         # game runs gen times, 1 = alive, 0 = dead
         # Calculate N, the N of live cells in C's eight-location neighborhood. 
         # need to change cell from (0,0).
-        self.printGen(0)
+        self.printGen(0,outf)
         for i in range(self.gen):
             self.tempG = copy.deepcopy(self.game)
             for j in range(self.rows):
                 for k in range(self.cols):
                     cell = (j,k)
-                    self.n = self.nearby(self.tempG,cell)
-                    self.game[cell[0]][cell[1]] = self.deadOrAlive(self.n,cell) #determine if cell is dead or alive
-            self.draw()
-            time.sleep(1)
-            self.printGen(i+1)
+                    n = self.nearby(self.tempG,cell)
+                    self.game[cell[0]][cell[1]] = self.deadOrAlive(n,cell) #determine if cell is dead or alive
+            self.draw()            
+            #time.sleep(0.1)
+            self.printGen(i+1,outf)
+        outf.close()
         mainloop()
-            
+
+
     def update(self):
         self.draw()    
         graph.after(500,update)
@@ -39,18 +41,22 @@ class Conway(Frame):
         self.master.title("Conway's Life")
         self.pack(fill=BOTH, expand=1)
 
-    def printGen(self,gen):
-        print("Generation:" +str(gen))
+    def printGen(self,gen,outf):
+        #print("Generation " +str(gen))
+        outf.write("Generation " +str(gen))
+        outf.write("\n")
         for i in range(self.rows):
-            print("".join(str(self.game[i])))
+            #print("".join(str(self.game[i])))
+            outf.write(''.join(str(x) for x in self.game[i]))
+            outf.write("\n")
 
     def draw(self):
         newGrid = self.game
         row = 0   
-        global graph  
-        while row < len(newGrid):        
+        global graph
+        while row < self.rows:        
             col = 0        
-            while col < len(newGrid[0]):            
+            while col < self.cols:            
                 cell = newGrid[row][col]            
                 startX = self.m*col            
                 endX = startX+self.m           
@@ -63,18 +69,20 @@ class Conway(Frame):
                 col = col+1         
             row = row+1   
             graph.update()
+        
 
     def build_graph(self):    
         global graph    
         global m
-        print(graph)
-        WIDTH = m*len(self.game[0])
-        HEIGHT = m*len(self.game)    
+        WIDTH = m*(len(self.game[0])+1)
+        HEIGHT = m*(len(self.game)+2)   
         root = Tk()    
         root.overrideredirect(True)    
         root.geometry('%dx%d+%d+%d' % (WIDTH, HEIGHT, (root.winfo_screenwidth() - WIDTH) / 2, (root.winfo_screenheight() - HEIGHT) / 2))    
         root.bind_all('<Escape>', lambda event: event.widget.quit())    
-        graph = Canvas(root, width=WIDTH, height=HEIGHT, background='white')      
+        root.title("Conway's Game of Life")
+        exitButton = Button(root, text="exit", command=root.destroy).pack()
+        graph = Canvas(root, width=WIDTH, height=HEIGHT, background='white')
         graph.pack()
 
     def deadOrAlive(self, N, cell):
@@ -96,21 +104,24 @@ class Conway(Frame):
     def nearby(self, graph, cell):
         row = cell[0]
         col = cell[1]
+
         N = 0
         if row != 0:
             N += graph[row-1][col]
             if col != 0:
                 N += graph[row-1][col-1]
-                N += graph[row][col-1]
-            if col != self.cols:
+            if col != self.cols-1:
                 N += graph[row-1][col+1]
-                N += graph[row][col+1]
-        if row != self.rows:
+        if row != self.rows-1:
             N += graph[row+1][col]
             if col != 0:
                 N += graph[row+1][col-1]
-            if col != self.cols:
+            if col != self.cols-1:
                 N += graph[row+1][col+1]
+        if col != 0:
+            N += graph[row][col-1]
+        if col != self.cols-1:
+            N += graph[row][col+1]
         return N
 
 
@@ -119,20 +130,34 @@ def IOGame(inFile, outFile):
     # will there be more than one graph in a file?
     #read graph and parse into a 2d array
     f = open(inFile,"r")
-    #out = open(outFile,"w") 
+    out = open(outFile,"w") 
     graph = []
     generations = int(f.readline()) #number of generations won't be read twice
     for line in f:
         temp = list(line)[:-1]
         graph.append([int(x) for x in temp]) #removing \n char from line
     game = copy.deepcopy(graph)
-    # need to print each thing to the file, open file and pass "out" to object??
 
-    Conway(generations, game)
+    Conway(generations, game, out)
 
 
 def main():
     IOGame("inLife.txt","outLife.txt")
+    test = '''100
+000000000000000000000000100000000000
+000000000000000000000010100000000000
+000000000000110000001100000000000011
+000000000001000100001100000000000011
+110000000010000010001100000000000000
+110000000010001011000010100000000000
+000000000010000010000000100000000000
+000000000001000100000000000000000000
+000000000000110000000000000000000000
+000000000000000000000000000000000000
+000000000000000000000000000000000000
+000000000000000000000000000000000000
+000000000000000000000000000000000000 '''
+
 
 
 main()
