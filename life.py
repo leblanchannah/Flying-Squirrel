@@ -1,3 +1,12 @@
+# Assignment 3 - Artificial Life - CISC 352
+# Spencer Edwards - 13srte
+# Hannah LeBlanc - 12hml4
+
+#
+# “I confirm that this submission is my own work and is consistent with
+# the Queen's regulations on Academic Integrity.”
+#
+
 import copy
 from tkinter import *
 import time
@@ -5,7 +14,9 @@ import time
 graph = []
 m = 25
 
+# Conway class
 class Conway(Frame):
+
     def __init__(self,generations,game,outf):
         self.gen = generations
         self.game = game[:-1]
@@ -14,12 +25,13 @@ class Conway(Frame):
         self.m = 25
         self.graph = []
         self.build_graph()
-        
         # game runs gen times, 1 = alive, 0 = dead
         # Calculate N, the N of live cells in C's eight-location neighborhood. 
         # need to change cell from (0,0).
         self.printGen(0,outf)
         for i in range(self.gen):
+            # for each generation, loop through all cells and calculate their N values
+            # update their status as dead or alive in grid
             self.tempG = copy.deepcopy(self.game)
             for j in range(self.rows):
                 for k in range(self.cols):
@@ -27,11 +39,10 @@ class Conway(Frame):
                     n = self.nearby(self.tempG,cell)
                     self.game[cell[0]][cell[1]] = self.deadOrAlive(n,cell) #determine if cell is dead or alive
             self.draw()            
-            #time.sleep(0.1)
+            #time.sleep(1)
             self.printGen(i+1,outf)
         outf.close()
         mainloop()
-
 
     def update(self):
         self.draw()    
@@ -41,12 +52,11 @@ class Conway(Frame):
         self.master.title("Conway's Life")
         self.pack(fill=BOTH, expand=1)
 
+    #Write the graph to output file. 
     def printGen(self,gen,outf):
-        #print("Generation " +str(gen))
         outf.write("Generation " +str(gen))
         outf.write("\n")
         for i in range(self.rows):
-            #print("".join(str(self.game[i])))
             outf.write(''.join(str(x) for x in self.game[i]))
             outf.write("\n")
 
@@ -85,6 +95,7 @@ class Conway(Frame):
         graph = Canvas(root, width=WIDTH, height=HEIGHT, background='white')
         graph.pack()
 
+    #determines if a given cell is ==0 or ==1 based on its N value
     def deadOrAlive(self, N, cell):
         if self.tempG[cell[0]][cell[1]] == 0: # cell of interest is dead
             if N == 3:
@@ -99,12 +110,11 @@ class Conway(Frame):
             else:
                 return 0 # overcrowding
 
-
-    #cell will be a tuple - (row,col)
+    #calulates N value by summing all neighbors within bounds
     def nearby(self, graph, cell):
+        #cell will be a tuple - (row,col)
         row = cell[0]
         col = cell[1]
-
         N = 0
         if row != 0:
             N += graph[row-1][col]
@@ -126,9 +136,6 @@ class Conway(Frame):
 
 
 def IOGame(inFile, outFile):
-    # number at start of file is number of generations to simulate followed by a graph
-    # will there be more than one graph in a file?
-    #read graph and parse into a 2d array
     f = open(inFile,"r")
     out = open(outFile,"w") 
     graph = []
@@ -143,7 +150,7 @@ def IOGame(inFile, outFile):
 
 def main():
     IOGame("inLife.txt","outLife.txt")
-    test = '''100
+    test = '''4
 000000000000000000000000100000000000
 000000000000000000000010100000000000
 000000000000110000001100000000000011
