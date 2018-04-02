@@ -23,8 +23,7 @@ class Boids:
         self.centreX = self.width // 2
         self.centreY = self.height // 2
         print(str(self.centreX) + ", " + str(self.centreY))
-        self.velocities = [[self.centreX / 100, self.centreY / 100] for i in range(n)] # positions[i] = (vx, vy) ie. velocity in each direction of boid i
-        #self.velocities = [[0, 0] for i in range(n)]
+        self.velocities = [[0, 0] for i in range(n)] # positions[i] = (vx, vy) ie. velocity in each direction of boid i
         self.wall = 10
         self.wallForce = 10
         self.boidSize = 6
@@ -69,6 +68,8 @@ class Boids:
                 bottom = self.height
             self.boids[i][0] = random.randrange(left, right)
             self.boids[i][1] = random.randrange(top, bottom)
+            self.velocities[i] = [(self.centreX - self.boids[i][0]) / 100,
+                                  (self.centreY - self.boids[i][1]) / 100]
         self.startTime = time.time()
         self.moveAllBoids()
 
@@ -111,7 +112,7 @@ class Boids:
             v3 = self.alignment(b, i)
             sum = vectorAdd(v1, vectorAdd(v2, v3))
             if (self.timeElapsed > 15) and (self.timeElapsed < 25):
-                v4 = self.wind(i)
+                v4 = self.wind()
                 sum = vectorAdd(sum, v4)
 
             self.velocities[i] = vectorAdd(self.velocities[i], sum)
@@ -123,7 +124,7 @@ class Boids:
             b = self.boids[i]
             if b != bj:
                 pcj = vectorAdd(pcj, self.boids[i])
-        pcj = [pcj[0] / (self.n - 1 / 2), pcj[1] / (self.n - 1 / 2)]
+        pcj = [pcj[0] / (self.n - 1), pcj[1] / (self.n - 1)]
         return [(pcj[0] - self.boids[ix][0]) / 100, (pcj[1] - self.boids[ix][1]) / 100]
 
     def separation(self, bj, ix):
@@ -144,8 +145,8 @@ class Boids:
         pvj = [pvj[0] / (self.n - 1), pvj[1] / (self.n - 1)]
         return [(pvj[0] - self.velocities[ix][0]) / 8, (pvj[1] - self.velocities[ix][1]) / 8]
 
-    def wind(self, ix):
-        v = [0, 10]
+    def wind(self):
+        v = [0, 5]
         return v
 
     def checkWalls(self, boid, ix):
@@ -159,6 +160,18 @@ class Boids:
             self.velocities[ix][1] += self.wallForce
         elif y < (self.height - self.wall):
             self.velocities[ix][1] -= self.wallForce
+
+    def angleBetween(self, v):
+        u = [self.centreX, self.centreY]
+        lengthU = math.sqrt(math.pow(u[0], 2) + math.pow(u[1], 2))
+        lengthV = math.sqrt(math.pow(v[0], 2) + math.pow(v[1], 2))
+        dotUV = (u[0] * v[0]) + (u[1] * v[1])
+        result = dotUV / (lengthU * lengthV)
+        if result > 1:
+            result = 1
+        elif result < (-1):
+            result = -1
+        return math.degrees(math.acos(result))
 
 def euclideanDistance(v1, v2):
      return math.sqrt(math.pow(v2[0] - v1[0], 2) + math.pow(v2[1] - v1[1], 2))
@@ -178,18 +191,6 @@ def vectorSubtract(v1, v2):
     for i in range(vlen):
         v3[i] = v1[i] - v2[i]
     return v3
-
-def angleBetween(v):
-    u = [0, -10000]
-    lengthU = math.sqrt(math.pow(u[0], 2) + math.pow(u[1], 2))
-    lengthV = math.sqrt(math.pow(v[0], 2) + math.pow(v[1], 2))
-    dotUV = (u[0] * v[0]) + (u[1] * v[1])
-    result = dotUV / (lengthU * lengthV)
-    if result > 1:
-        result = 1
-    elif result < (-1):
-        result = -1
-    return math.degrees(math.acos(result))
 
 def main():
     n = 24         # number of boids
