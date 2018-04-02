@@ -146,7 +146,6 @@ class Boids:
                 sum = vectorAdd(sum, v4)
 
             self.velocities[i] = vectorAdd(self.velocities[i], sum)
-            print(self.velocities[i])
             
         for i in range(len(self.boids)):
             self.velocities[i][0] /= 5
