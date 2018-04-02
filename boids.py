@@ -23,6 +23,7 @@ class Boids:
         self.height = 600
         self.wall = 10
         self.wallForce = 10
+        self.boidSize = 6
 
         root = Tk()
         root.title("Hello")
@@ -89,17 +90,23 @@ class Boids:
         #botLeftY = centreY - halfHeight
         #botRightX = centreX + halfBase
         #botRightY = centreY - halfHeight
-        theta = angleBetween([centreX, centreY])
 
-        top = [centreX, centreY + halfHeight]
-        botLeft = [centreX - halfBase, centreY + halfHeight]
-        botRight = [centreX + halfBase, centreY - halfHeight]
+        #theta = angleBetween([centreX, centreY])
+        #top = [centreX, centreY + halfHeight]
+        #botLeft = [centreX - halfBase, centreY + halfHeight]
+        #botRight = [centreX + halfBase, centreY - halfHeight]
+        #[topX, topY] = rotatePoint(top, centre, theta)
+        #[botLeftX, botLeftY] = rotatePoint(botLeft, centre, theta)
+        #[botRightX, botRightY] = rotatePoint(botRight, centre, theta)
 
-        [topX, topY] = rotatePoint(top, centre, theta)
-        [botLeftX, botLeftY] = rotatePoint(botLeft, centre, theta)
-        [botRightX, botRightY] = rotatePoint(botRight, centre, theta)
+        #self.wn.create_line(topX, topY, botRightX, botRightY, botLeftX, botLeftY, topX, topY)
 
-        self.wn.create_line(topX, topY, botRightX, botRightY, botLeftX, botLeftY, topX, topY)
+        leftX = centreX - self.boidSize
+        leftY = centreY + (self.boidSize / 2)
+        rightX = centreX + self.boidSize
+        rightY = centreY - (self.boidSize / 2)
+
+        self.wn.create_oval(leftX, leftY, rightX, rightY)
         self.wn.update()
 
     def moveAllBoids(self):
