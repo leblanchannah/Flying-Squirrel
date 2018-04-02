@@ -110,7 +110,7 @@ class Boids:
             v2 = self.separation(b, i)
             v3 = self.alignment(b, i)
             sum = vectorAdd(v1, vectorAdd(v2, v3))
-            if (self.timeElapsed > 15) && (self.timeElapsed < 25):
+            if (self.timeElapsed > 15) and (self.timeElapsed < 25):
                 v4 = self.wind(i)
                 sum = vectorAdd(sum, v4)
 
