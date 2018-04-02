@@ -18,12 +18,18 @@ class Boids:
         self.n = n     # number of boids
         self.interval = interval
         self.boids = [[0,0] for i in range(n)]      # boids[i] = (x, y)   ie. position of boid i
-        self.velocities = [[0,0] for i in range(n)] # positions[i] = (vx, vy) ie. velocity in each direction of boid i
         self.width = 800
         self.height = 600
+        self.centreX = self.width // 2
+        self.centreY = self.height // 2
+        print(str(self.centreX) + ", " + str(self.centreY))
+        self.velocities = [[self.centreX / 100, self.centreY / 100] for i in range(n)] # positions[i] = (vx, vy) ie. velocity in each direction of boid i
+        #self.velocities = [[0, 0] for i in range(n)]
         self.wall = 10
         self.wallForce = 10
         self.boidSize = 6
+        self.startTime = 0
+        self.timeElapsed = 0
 
         root = Tk()
         root.title("Hello")
@@ -38,35 +44,36 @@ class Boids:
         mainloop()
 
     def initializeBoids(self):
-        quarter = self.n // 4
+        quarter = self.n / 4
         #Place boids on screen with equal distribution
         for i in range(self.n):
             if i < quarter:
                 left = self.width // 2
                 right = self.width
-                top = self.height
+                top = 0
                 bottom = self.height // 2
             elif i < (quarter * 2):
                 left = 0
                 right = self.width // 2
-                top = self.height
+                top = 0
                 bottom = self.height // 2
             elif i < (quarter * 3):
                 left = 0
                 right = self.width // 2
                 top = self.height // 2
-                bottom = 0
+                bottom = self.height
             else:
                 left = self.width // 2
                 right = self.width
                 top = self.height // 2
-                bottom = 0
+                bottom = self.height
             self.boids[i][0] = random.randrange(left, right)
-            self.boids[i][1] = random.randrange(bottom, top)
-            #print("Boid: [" + str(self.boids[i][0]) + ", " + str(self.boids[i][1]) + "]")
+            self.boids[i][1] = random.randrange(top, bottom)
+        self.startTime = time.time()
         self.moveAllBoids()
 
     def runBoids(self):
+        self.timeElapsed = time.time() - self.startTime
         self.drawBoids()
         self.moveAllBoids()
         self.wn.after(self.interval, self.runBoids)
@@ -74,37 +81,16 @@ class Boids:
     def drawBoids(self):
         self.wn.delete(ALL)
         for i in range(self.n):
-            self.drawABoid(self.boids[i], i)
+            self.drawABoid(self.boids[i])
 
-    def drawABoid(self, boid, i):
-        base = 10
-        height = 15
-        halfBase = base / 2
-        halfHeight = height / 2
+    def drawABoid(self, boid):
         centreX = boid[0]
         centreY = boid[1]
-        centre = [centreX, centreY]
-        #topX = centreX
-        #topY = centreY + halfHeight
-        #botLeftX = centreX - halfBase
-        #botLeftY = centreY - halfHeight
-        #botRightX = centreX + halfBase
-        #botRightY = centreY - halfHeight
-
-        #theta = angleBetween([centreX, centreY])
-        #top = [centreX, centreY + halfHeight]
-        #botLeft = [centreX - halfBase, centreY + halfHeight]
-        #botRight = [centreX + halfBase, centreY - halfHeight]
-        #[topX, topY] = rotatePoint(top, centre, theta)
-        #[botLeftX, botLeftY] = rotatePoint(botLeft, centre, theta)
-        #[botRightX, botRightY] = rotatePoint(botRight, centre, theta)
-
-        #self.wn.create_line(topX, topY, botRightX, botRightY, botLeftX, botLeftY, topX, topY)
 
         leftX = centreX - self.boidSize
-        leftY = centreY + (self.boidSize / 2)
+        leftY = centreY - (self.boidSize / 2)
         rightX = centreX + self.boidSize
-        rightY = centreY - (self.boidSize / 2)
+        rightY = centreY + (self.boidSize / 2)
 
         self.wn.create_oval(leftX, leftY, rightX, rightY)
         self.wn.update()
@@ -120,11 +106,13 @@ class Boids:
 
         for i in range(len(self.boids)):
             b = self.boids[i]
-            #print("b: [" + str(b[0]) + ", " + str(b[1]) + "]")
             v1 = self.cohesion(b, i)
             v2 = self.separation(b, i)
             v3 = self.alignment(b, i)
             sum = vectorAdd(v1, vectorAdd(v2, v3))
+            if (self.timeElapsed > 15) && (self.timeElapsed < 25):
+                v4 = self.wind(i)
+                sum = vectorAdd(sum, v4)
 
             self.velocities[i] = vectorAdd(self.velocities[i], sum)
             self.boids[i] = vectorAdd(self.boids[i], self.velocities[i])
@@ -143,7 +131,7 @@ class Boids:
         for i in range(len(self.boids)):
             b = self.boids[i]
             if b != bj:
-                if euclideanDistance(self.boids[i], self.boids[ix]) < 30:
+                if euclideanDistance(self.boids[i], self.boids[ix]) < 15:
                     c = vectorSubtract(c, vectorSubtract(self.boids[i],  self.boids[ix]))
         return c
 
@@ -155,6 +143,10 @@ class Boids:
                 pvj = vectorAdd(pvj, self.velocities[i])
         pvj = [pvj[0] / (self.n - 1), pvj[1] / (self.n - 1)]
         return [(pvj[0] - self.velocities[ix][0]) / 8, (pvj[1] - self.velocities[ix][1]) / 8]
+
+    def wind(self, ix):
+        v = [0, 10]
+        return v
 
     def checkWalls(self, boid, ix):
         x = boid[0]
@@ -197,21 +189,7 @@ def angleBetween(v):
         result = 1
     elif result < (-1):
         result = -1
-    #print("Angle between: " + str(math.degrees(math.acos(result))))
     return math.degrees(math.acos(result))
-
-def rotatePoint(v, c, theta):
-    x = v[0]
-    y = v[1]
-    cx = c[0]
-    cy = c[1]
-    #print("Before x: " + str(x) + ", before y: " + str(y))
-    x -= cx
-    y -= cy
-    newX = (math.cos(theta) * x) - (math.sin(theta) * y)
-    newY = (math.sin(theta) * x) + (math.cos(theta) * y)
-    #print("After x: " + str(newX + cx) + ", after y: " + str(newY + cx))
-    return [newX + cx, newY + cy]
 
 def main():
     n = 24         # number of boids
