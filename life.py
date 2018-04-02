@@ -48,10 +48,6 @@ class Conway(Frame):
         self.draw()    
         graph.after(500,update)
 
-    def init_window(self):
-        self.master.title("Conway's Life")
-        self.pack(fill=BOTH, expand=1)
-
     #Write the graph to output file. 
     def printGen(self,gen,outf):
         outf.write("Generation " +str(gen))
@@ -60,6 +56,7 @@ class Conway(Frame):
             outf.write(''.join(str(x) for x in self.game[i]))
             outf.write("\n")
 
+    # given in assignment 3 description
     def draw(self):
         newGrid = self.game
         row = 0   
@@ -80,7 +77,7 @@ class Conway(Frame):
             row = row+1   
             graph.update()
         
-
+    # given in assignment 3 description
     def build_graph(self):    
         global graph    
         global m
@@ -117,21 +114,21 @@ class Conway(Frame):
         col = cell[1]
         N = 0
         if row != 0:
-            N += graph[row-1][col]
+            N += graph[row-1][col] # cell above
             if col != 0:
-                N += graph[row-1][col-1]
+                N += graph[row-1][col-1] # upper left
             if col != self.cols-1:
-                N += graph[row-1][col+1]
+                N += graph[row-1][col+1]  # upper right
         if row != self.rows-1:
-            N += graph[row+1][col]
+            N += graph[row+1][col] # cell below
             if col != 0:
-                N += graph[row+1][col-1]
+                N += graph[row+1][col-1] # lower left
             if col != self.cols-1:
-                N += graph[row+1][col+1]
+                N += graph[row+1][col+1] # lower right
         if col != 0:
-            N += graph[row][col-1]
+            N += graph[row][col-1] # left cell
         if col != self.cols-1:
-            N += graph[row][col+1]
+            N += graph[row][col+1] # right cell
         return N
 
 
@@ -149,6 +146,7 @@ def IOGame(inFile, outFile):
 
 
 def main():
+    # input file, output file
     IOGame("inLife.txt","outLife.txt")
     test = '''4
 000000000000000000000000100000000000
@@ -164,7 +162,5 @@ def main():
 000000000000000000000000000000000000
 000000000000000000000000000000000000
 000000000000000000000000000000000000 '''
-
-
 
 main()
